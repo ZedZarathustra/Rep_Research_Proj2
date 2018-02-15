@@ -1,0 +1,26 @@
+---
+title: "Rep_Data_Proj2"
+author: "Scott Zwick"
+date: "February 14, 2018"
+output: html_document
+---
+
+```{r setup}
+library(dplyr)
+library(ggplot2)
+library(knitr)
+knitr::opts_chunk$set(echo = TRUE)
+setwd("~/R/Coursera/5-Reproducible Research/Rep_Research_Proj2")
+strm_data <- read.csv("repdata%2Fdata%2FStormData.csv")
+```
+
+1. Across the United States, which types of events (as indicated in the EVTYPE variable) are most harmful with respect to population health?
+
+```{r fat+inj}
+strm_data$FAT_INJ <- strm_data$FATALITIES + strm_data$INJURIES
+fat_inj <- select(strm_data, EVTYPE, FAT_INJ)
+fat_inj_tot <- aggregate(FAT_INJ~EVTYPE, fat_inj, sum)
+fat_inj_max <- fat_inj_tot[which.max(fat_inj_tot$FAT_INJ),]
+```
+
+2. Across the United States, which types of events have the greatest economic consequences?
