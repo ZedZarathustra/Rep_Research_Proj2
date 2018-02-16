@@ -14,13 +14,20 @@ setwd("~/R/Coursera/5-Reproducible Research/Rep_Research_Proj2")
 strm_data <- read.csv("repdata%2Fdata%2FStormData.csv")
 ```
 
-1. Across the United States, which types of events (as indicated in the EVTYPE variable) are most harmful with respect to population health?
+### 1. Across the United States, which types of events (as indicated in the EVTYPE variable) are most harmful with respect to population health?
 
 ```{r fat+inj}
 strm_data$FAT_INJ <- strm_data$FATALITIES + strm_data$INJURIES
 fat_inj <- select(strm_data, EVTYPE, FAT_INJ)
 fat_inj_tot <- aggregate(FAT_INJ~EVTYPE, fat_inj, sum)
 fat_inj_max <- fat_inj_tot[which.max(fat_inj_tot$FAT_INJ),]
+print(fat_inj_max)
+fat_inj_rst <- sum(fat_inj_tot$FAT_INJ) - fat_inj_max$FAT_INJ
+print(fat_inj_rst)
 ```
 
-2. Across the United States, which types of events have the greatest economic consequences?
+Per the data collected, tornados have caused 96,979 injuries and fatalities during the study period. 
+
+It should be noted that the data provided has many duplicated, or seemingly duplicated Event Types. As the total number of injuries and fatalities for all other Event types is 56,694, it is clear that while the exact amount of injuries and fatalities for tornados may be slightly inaccurate, no other Event Type has caused a greater number of fatalities or injuries than tornados.  
+
+## 2. Across the United States, which types of events have the greatest economic consequences?
