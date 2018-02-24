@@ -392,4 +392,43 @@ strm_data4 <- strm_data3 %>%
           "^WIND CHILL$" = "COLD/WIND CHILL",
           "^WINDS$" = "HIGH WIND"
           )
-     ))```
+     ))
+```
+
+```{r calc_max}
+strm_data5 <- mutate_all(strm_data4, funs(toupper))
+
+strm_data6 <- strm_data5[!(strm_data5$PROPDMGEXP == "2" |
+                           strm_data5$PROPDMGEXP == "3" |
+                           strm_data5$PROPDMGEXP == "4" |
+                           strm_data5$PROPDMGEXP == "5" |
+                           strm_data5$PROPDMGEXP == "6" |
+                           strm_data5$PROPDMGEXP == "7" |
+                           strm_data5$PROPDMGEXP == "-" |
+                           strm_data5$PROPDMGEXP == "+" |
+                           strm_data5$PROPDMGEXP == "H"
+                           ),]
+
+strm_data6 <- strm_data6[!(strm_data6$CROPDMGEXP == "?"),]
+
+
+strm_data6$PROPDMGEXP <- gsub("K", "1000", strm_data6$PROPDMGEXP)
+strm_data6$PROPDMGEXP <- gsub("M", "1000000", strm_data6$PROPDMGEXP)
+strm_data6$PROPDMGEXP <- gsub("B", "1000000000", strm_data6$PROPDMGEXP)
+
+strm_data6$CROPDMGEXP <- gsub("K", "1000", strm_data6$CROPDMGEXP)
+strm_data6$CROPDMGEXP <- gsub("M", "1000000", strm_data6$CROPDMGEXP)
+strm_data6$CROPDMGEXP <- gsub("B", "1000000000", strm_data6$CROPDMGEXP)
+
+conv_cols <- c("PROPDMG","PROPDMGEXP", "CROPDMG", "CROPDMGEXP")
+strm_data6[conv_cols] <- sapply(strm_data6[conv_cols],as.numeric)
+sapply(strm_data6, class)
+
+strm_data6$PROPDMG_tot <- strm_data6$PROPDMG * strm_data6$PROPDMGEXP
+strm_data6$CROPDMG_tot <- strm_data6$CROPDMG * strm_data6$CROPDMGEXP
+strm_data6$DMG_tot <- strm_data6$PROPDMG_tot + strm_data6$CROPDMG_tot
+DMG_total <- select(strm_data6, EVTYPEFix, DMG_tot)
+DAMAGE_total <- aggregate(DMG_tot~EVTYPEFix, DMG_total, sum)
+DAMAGE_total_max <- DAMAGE_total[which.max(DAMAGE_total$DMG_tot),]
+print(DAMAGE_total_max)
+```
