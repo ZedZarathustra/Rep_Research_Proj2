@@ -1,9 +1,22 @@
 ---
-title: "Rep_Data_Proj2"
+title: "Coursera - Reproducible Research - Project #2"
 author: "Scott Zwick"
 date: "February 14, 2018"
-output: html_document
+output:
+  html_document: default
+  pdf_document: default
 ---
+................................................................................................................................................................
+
+##Weather events and their effects on population's health and economic consequenes, based on data from the NOAA Storm Database.
+
+................................................................................................................................................................
+
+###Synopsis
+The goal of this report is twofold. First, to present data that shows what types
+of storm events are most harmful to public health. Second, to explore which storm
+events create the most economic damage. The U.S. National Oceanic and Atmospheric
+Administration's (NOAA) storm database provided the data for this study.
 
 ```{r setup}
 library(dplyr)
@@ -12,18 +25,28 @@ library(knitr)
 library(stringr)
 knitr::opts_chunk$set(echo = TRUE)
 setwd("~/R/Coursera/5-Reproducible Research/Rep_Research_Proj2")
-strm_data <- read.csv("repdata%2Fdata%2FStormData.csv", stringsAsFactors = F)
+download.file("https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2FStormData.csv.bz2","repdata-data-StormData.csv.bz2")
+strm_data <- read.csv(bzfile("repdata-data-StormData.csv.bz2"), header = TRUE, stringsAsFactors = FALSE)
 ```
 
-```{r tidy_data}
-strm_data1 <- strm_data[!(strm_data$FATALITIES== 0 & strm_data$INJURIES==0),]
-strm_data2 <- strm_data1 %>%
+###Data Processing
+The documentation for the storm data base indicated there were 48 different storm
+events. The database actually included over 900 different storm events. After a
+thorough review of the data, a cleansing of the event types was performed to gather
+all events into the specific storm events detailed in the documentation.
+
+```{r tidy_data1}
+
+## Clean up EVTYPE
+strm_data1 <- mutate_all(strm_data, funs(toupper))
+
+strm_data1 <- strm_data %>%
      mutate(EVTYPE = str_to_upper(EVTYPE) %>%
                  str_trim()) %>%
      filter(!str_detect(EVTYPE, "SUMMARY")) %>%
      mutate(EVTYPEFix = str_replace_all(
           EVTYPE,
-          c("^(NON|NO)?[ -]?(SEVERE|STRONG|MAJOR|MODERATE|LIGHT|HEAVY|HVY|EXCESSIVE|DENSE|DEEP|DAMAGING|MINOR|EXTREME) " = "", # Get rid of "severe/non-severe"
+          c("^(NON|NO)?[ -]?(SEVERE|STRONG|MAJOR|MODERATE|LIGHT|HEAVY|HVY|EXCESSIVE|DENSE|DEEP|DAMAGING|MINOR|EXTREME) " = "",
             "(.*)BLIZZARD(.*)" = "BLIZZARD",
             "HIGH" = "HIGH WIND",
             "FROST" = "FROST/FREEZE",
@@ -181,254 +204,230 @@ strm_data2 <- strm_data1 %>%
             "DRY MIRCOBURST HIGH WIND" = "THUNDERSTORM WIND",
             "WHIRLHIGH WIND" = "HIGH WIND",
             "OTHER" = "DUST DEVIL",
-            "MARINE HIGH WIND/HIGH WIND" = "MARINE HIGH WIND"
-          )
+            "MARINE HIGH WIND/HIGH WIND" = "MARINE HIGH WIND",
+            "MARINE TSTM WIND" = "MARINE THUNDERSTORM WIND",
+            "TSTM ?WN?D?" = "THUNDERSTORM WIND",
+            "TSTM" = "THUNDERSTORM",
+            "COLD/(.*)" = "COLD",
+            "AGRICULTURAL FREEZE" = "FROST/FREEZE",
+            "APACHE COUNTY" = "HIGH WIND",
+            "ASTRONOMICAL HIGH TIDE" = "HIGH SURF",
+            "BEACH EROSION" = "HIGH SURF",
+            "BLOWING DUST" = "DUST STORM",
+            "BLOWING SNO(.*)" = "WINTER STORM",
+            "BREAKUP FLOOD" = "FLOOD",
+            "COASTAL EROSION" = "HIGH WIND",
+            "COASTAL FLOOD" = "FLOOD",
+            "COASTAL SURGE" = "STORM SURGE/TIDE",
+            "COASTAL STORM" = "MARINE THUNDERSTORM WIND",
+            "COOL AND WET" = "COLD/WIND CHILL",
+            "DAM(.*)" = "FLASH FLOOD",
+            "DOWNBURST" = "HEAVY RAIN",
+            "DUST DEVIL WATERSPOUT" = "DUST DEVIL",
+            "DUST STORM/WIND" = "DUST STORM",
+            "EROSION/FLOOD" = "FLOOD",
+            "EXTENDED COLD" = "COLD/WIND CHILL",
+            "FOREST FIRES" = "WILDFIRE",
+            "FREEZING PRECIP" = "SLEET",
+            "GLAZE(.*)" = "SLEET",
+            "EARLY FROST" = "FROST/FREEZE", 
+            "EXTREME COLD" = "EXTREME COLD/WIND CHILL",
+            "EXTREME HEAT" = "EXCESSIVE HEAT",
+            "EXTREME WINDCHILL" = "EXTREME COLD/WIND CHILL",
+            "GRADIENT WIND" = "HIGH WIND",
+            "GRASS FIRES" = "WILDFIRE",
+            "GUSTNADO" = "THUNDERSTORM WIND",
+            "HARD FREEZE" = "FROST/FREEZE",
+            "HEAVY LAKE EFFECT SNOW" = "LAKE-EFFECT SNOW",
+            "HEAVY MIX" = "WINTER STORM",
+            "HEAVY PRECIPITATION" = "HEAVY RAIN",
+            "HEAVY SNOW AND STRONG WINDS" = "BLIZZARD",
+            "HEAVY SNOW (.*)" = "WINTER STORM",
+            "HEAVY SNOW/(.*)" = "HEAVY SNOW",
+            "HEAVY SNOWPACK" = "HEAVY SNOW",
+            "EXCESSIVE SNOW" = "HEAVY SNOW",
+            "HEAVY SNOW-SQUALLS" = "HEAVY SNOW",
+            "HEAVY SURF(.*)" = "HIGH SURF",
+            "HEAVY SWELLS" = "HIGH SURF",
+            "HIGH SURF ADVISORY" = "HIGH SURF",
+            "HIGH TIDES" = "STORM SURGE/TIDE",
+            "ICE/STRONG WINDS" = "ICE STORM",
+            "LAKE EFFECT SNOW" = "LAKE-EFFECT SNOW",
+            "LAKE FLOOD" = "FLOOD",
+            "LANDSPOUT" = "DUST DEVIL",
+            "MICROBURST(.*)" = "THUNDERSTORM WIND",
+            "MIXED PRECIPITATION" = "WINTER WEATHER",
+            "MUDSLIDE" = "DEBRIS FLOW",
+            "NON-THUNDERSTORM" = "HIGH WIND",
+            "RIVER AND STREAM FLOOD" = "FLOOD",
+            "ROCK SLIDE" = "DEBRIS FLOW", 
+            "RURAL FLOOD" = "FLOOD",
+            "SMALL STREAM FLOOD" = "FLOOD",
+            "STORM FORCE WINDS" = "HIGH WIND",
+            "THUNDERSNOW" = "WINTER STORM",
+            "TIDAL FLOOD" = "STORM SURGE/TIDE",
+            "URBAN FLOOD" = "FLOOD",
+            "WET THUNDERSTORM WIND" = "THUNDERSTORM WIND",
+            "WIND AND WAVE" = "HIGH WIND",
+            "UNSEASONABLY RAIN" = "HEAVY RAIN",
+            "^COLD$" = "COLD/WIND CHILL",
+            "^FOG$" = "DENSE FOG", 
+            "^FREEZE$" = "FROST/FREEZE",
+            "^FROST$" = "FROST/FREEZE",
+            "^ICE$" = "ICE STORM",
+            "^MARINE THUNDERSTORM$" = "MARINE THUNDERSTORM WIND",
+            "^RAIN$" = "HEAVY RAIN",
+            "^SNOW$" = "HEAVY SNOW",
+            "^STORM SURGE$" = "STORM SURGE/TIDE",
+            "^THUNDERSTORM$" = "THUNDERSTORM WIND",
+            "^TYPHOON$" = "HURRICANE (TYPHOON)",
+            "^WIND$" = "HIGH WIND",
+            "^WIND CHILL$" = "COLD/WIND CHILL",
+            "^WINDS$" = "HIGH WIND",
+            "ABNORMAL WARMTH" = "HEAT",
+            "ABNORMALLY DRY" = "DROUGHT",
+            "ABNORMALLY WET" = "HEAVY RAIN",
+            "ACCUMULATED SNOWFALL" = "HEAVY SNOW",
+            "AGRICULTURAL FROST/FREEZE" = "FROST/FREEZE",
+            "ASTRONOMICAL HIGH WIND" = "HIGH WIND",
+            "BEACH EROSIN" = "HIGH SURF",
+            "BELOW NORMAL PRECIPITATION" = "DROUGHT",
+            "COOL(.*)" = "COLD/WIND CHILL",
+            "DRIEST MONTH" = "DROUGHT",
+            "DRIFTING SNOW" = "BLIZZARD",
+            "DRY(.*)" = "DROUGHT",
+            "DUST DEVEL" = "DUST DEVIL",
+            "DUST STORM/HIGH WIND" = "DUST STORM",
+            "DUSTSTORM" = "DUST STORM",
+            "EARLY HEAVY RAIN" = "HEAVY RAIN",
+            "EARLY SNOW(.*)" = "HEAVY SNOW",
+            "EXCESSIVELY DROUGHT" = "DROUGHT",
+            "EXTREMELY WET" = "HEAVY RAIN",
+            "FIRST FROST/FREEZE" = "FROST/FREEZE",
+            "FIRST SNOW" = "HEAVY SNOW",
+            "FLASH FLOOODING" = "FLASH FLOOD",
+            "FROST/FREEZE(.*)" = "FROST/FREEZE",
+            "GRADIENT HIGH WIND" = "HIGH WIND",
+            "GUSTY LAKE HIGH WIND" = "HIGH WIND",
+            "GUSTY THUNDERSTORM WIND" = "THUNDERSTORM WIND",
+            "HARD FROST/FREEZE" = "FROST/FREEZE",
+            "HEAT(.*)" = "HEAT",
+            "HEAVY RAIN HIGH WIND" = "HEAVY RAIN",
+            "HIGH WIND WIND" = "HIGH WIND",
+            "HOT(.*)" = "HEAT",
+            "ICE STORM(.*)" = "ICE STORM",
+            "LATE FROST/FREEZE" = "FROST/FREEZE",
+            "LATE MARINE HIGH WINDON HAIL" = "MARINE HIGH WIND",
+            "LATE SNOW" = "HEAVY SNOW",
+            "LOCAL FLASH FLOOD" = "FLASH FLOOD",
+            "LOCAL FLOOD" = "FLOOD",
+            "LOW HEAVY RAIN" = "HEAVY RAIN",
+            "MARINE HIGH WIND(.*)" = "MARINE HIGH WIND",
+            "MAY SNOW" = "HEAVY SNOW",
+            "MILD AND DROUGHT" = "DROUGHT",
+            "MILD/DROUGHT" = "DROUGHT",
+            "MIX" = "WINTER WEATHER",
+            "MONTHLY HEAVY RAIN" = "HEAVY RAIN",
+            "MONTHLY PRECIPITATION" = "HEAVY RAIN",
+            "MONTHLY SNOWFALL" = "HEAVY SNOWFALL",
+            "MOUNTAIN SNOWS" = "HEAVY SNOW",
+            "NORMAL PRECIPITATION" = "HEAVY RAIN",
+            "PATCHY DENSE DENSE FOG" = "DENSE FOG",
+            "PATCHY ICE STORM" = "ICE STORM",
+            "PRECIP(.*)" = "HEAVY RAIN",
+            "PROLONG WARMTH" = "HEAT",
+            "PROLONGED HEAVY RAIN" = "HEAVY RAIN",
+            "REMNANTS OF FLOYD" = "HURRICANE (TYPHOON)",
+            "SAHARAN DUST" = "DUST STORM",
+            "^SMOKE$" = "DENSE SMOKE",
+            "SNOWFALL" = "HEAVY SNOW",
+            "STORM FORCE HIGH WIND" = "HIGH WIND",
+            "STREAM FLOOD" = "FLOOD",
+            "THUNDERSTORM WIND AND" = "THUNDERSTORM WIND",
+            "UNMARINE HIGH WIN(.*)" = "MARINE HIGH WIND",
+            "VERY DROUGHT" = "DROUGHT",
+            "VERY WARM" = "HEAT",
+            "VOG" = "DENSE FOG",
+            "WARM(.*)" = "HEAT",
+            "WET SNOW" = "HEAVY SNOW",
+            "WET(.*)" = "HEAVY RAIN",
+            "WILDFIRES" = "WILDFIRE",
+            "WINTER STORMITATION" = "WINTER STORMITATION"
+            )
      ))
 ```
 
 ### 1. Across the United States, which types of events (as indicated in the EVTYPE variable) are most harmful with respect to population health?
 
 ```{r fat+inj}
-strm_data2$FAT_INJ <- strm_data2$FATALITIES + strm_data2$INJURIES
-fat_inj <- select(strm_data2, EVTYPEFix, FAT_INJ)
-fat_inj_tot <- aggregate(FAT_INJ~EVTYPEFix, fat_inj, sum)
-fat_inj_max <- fat_inj_tot[which.max(fat_inj_tot$FAT_INJ),]
-print(fat_inj_max)
-fat_inj_rst <- sum(fat_inj_tot$FAT_INJ) - fat_inj_max$FAT_INJ
-print(fat_inj_rst)
-```
+## Create column with the sum of fatalities and injuries
+strm_data1$FAT_INJ <- strm_data1$FATALITIES + strm_data1$INJURIES
 
+## Get the sum of the fatalities/injuries by EVTYPE
+fat_inj <- select(strm_data1, EVTYPEFix, FAT_INJ)
+fat_inj_tot <- aggregate(FAT_INJ~EVTYPEFix, fat_inj, sum)
+
+## Get top 5
+fat_inj_5 <- fat_inj_tot[order(fat_inj_tot$FAT_INJ, decreasing=T)[1:5],]
+
+## Bar graph
+barplot(fat_inj_5$FAT_INJ, main = "Total Fatalities and Injuries", 
+        names.arg = fat_inj_5$EVTYPEFix, cex.names = .75)
+```
 Per the data collected, tornados have caused the most direct injuries and fatalities during the study period. 
 
+
 ## 2. Across the United States, which types of events have the greatest economic consequences?
-
-```{r tidy_data}
-strm_data3 <- strm_data[!(strm_data$PROPDMG== 0 & strm_data$CROPDMG==0),]
-strm_data3 <- strm_data3[!(strm_data3$EVTYPE == "?" |
-                           strm_data3$EVTYPE == "EXCESSIVE WETNESS" |
-                           strm_data3$EVTYPE == "SEVERE TURBULENCE"),]
-
-strm_data3$EVTYPE[strm_data3$REFNUM >= 298582 & strm_data3$REFNUM <= 298611] <- "HEAVY RAIN"
-strm_data3$EVTYPE[strm_data3$REFNUM == 249429] <- "HEAVY SNOW"
-
-strm_data4 <- strm_data3 %>%
-     mutate(EVTYPE = str_to_upper(EVTYPE) %>%
-                 str_trim()) %>%
-     filter(!str_detect(EVTYPE, "SUMMARY")) %>%
-     mutate(EVTYPEFix = str_replace_all(
-          EVTYPE,
-          c("^(NON|NO)?[ -]?(DAMAGING|DEEP|HVY|LIGHT|MAJOR|MINOR|MODERATE|SEVERE|STRONG) " = "",
-          "(.*)BLIZZARD(.*)" = "BLIZZARD",
-          "^HAIL(.*)" = "HAIL",
-          "(COASTAL|CSTL|BEACH)(.*)FLOOD(.*)" = "COASTAL FLOOD",
-          "COASTAL ?STORM" = "COASTAL STORM",
-          "BLOWING SNOW(.*)" = "BLOWING SNOW",
-          "BLOW-OUT TIDE(.*)" = "BLOW OUT TIDE",
-          "TIDAL(.*)FLOOD(.*)" = "TIDAL FLOOD",
-          "MARINE TSTM WIND" = "MARINE THUNDERSTORM WIND",
-          "TSTM ?WN?D?" = "THUNDERSTORM WIND",
-          "TSTM" = "THUNDERSTORM",
-          "WND" = "WIND",
-          "TH?UNDEE?R(.*?)WIND(.*)" = "THUNDERSTORM",
-          "^THUNDERWIND(.*)" = "THUNDERSTORM",
-          "THUNDERWIND(.*)" = "THUNDERSTORM",
-          "(.*)(TORNADO|TORNDAO)(.*)" = "TORNADO",
-          "TROPICAL STORM(.*)" = "TROPICAL STORM",
-          "TORRENTIAL RAIN" = "HEAVY RAIN",
-          "UNSEASON([A-Z]*)" = "UNSEASONABLY",
-          "&" = "AND",
-          "URBAN AND " = "URBAN/",
-          "LANDSL(.*)" = "LANDSLIDE",
-          "STORM SURGE(.*)" = "STORM SURGE",
-          "STREET FLOOD(.*)" = "STREET FLOODING",
-          "(.*)URBAN(.*)FL(.*)" = "URBAN FLOODING",
-          "URBAN/SMALL(.*)" = "URBAN FLOODING",
-          "(URBAN SMALL)" = "URBAN FLOODING",
-          "WAY?TER ?SPOUT(.*)" = "WATERSPOUT",
-          "WINTER STORM(.*)" = "WINTER STORM",
-          "WINTER(.*)MIX" = "WINTRY MIX",
-          "(.*)WIND CHILL(.*)" = "WIND CHILL",
-          "^RIP CURRENT(.*)" = "RIP CURRENT",
-          "^RIVER FLOOD(.*)" = "RIVER FLOODING",
-          "^WIND[S /]{0,}(ADVISORY|DAMAGE|GUSTS|STORM|HAIL)$" = "WIND",
-          "UNUSUALLY|UNUSUAL|UNSEASONABLY" = "UNSEASONABLY",
-          "^SNOW(.*)" = "SNOW",
-          "WALL CLOUD(.*)" = "WALL CLOUD", 
-          "^FLASH FLOOD" = "FLASH FLOOD",
-          "VOLCAN(.*)" = "VOLCANO",
-          "^ICE JAM(.*)" = "ICE JAM",
-          "ICE ?/?((AND|SNOW|FLOES|STORM|PELLETS) ?){1,}" = "ICE",
-          "LAKE(.*)SNOW" = "LAKE EFFECT SNOW",
-          "LAKE(.*)FLOOD" = "LAKE FLOOD",
-          "LATE(.*)SEASON SNOW(.*)" = "SNOW",
-          "THUNDERSNOW(.*)" = "THUNDERSNOW",
-          "(THUNDER|THUNDE|THUNER|THUDER)STORM(.*)" = "THUNDERSTORM",
-          "SLEET(.*)" = "SLEET",
-          "(SMALL STREAM)|(SML STREAM) (FLOODING|FLD|FLOOD)" = "SMALL STREAM FLOODING",
-          "SMALL STREAM(.*)" = "SMALL STREAM FLOODING",
-          "RED FLAG(.*)" = "RED FLAG",
-          "ROUGH (SEAS|SURF)" = "ROUGH SEAS",
-          "RAIN(.*)" = "RAIN",
-          "MUD(.*)SLIDE(.*)" = "MUDSLIDE",
-          "(NEAR )?RECORD ?" = "",
-          "(LIGHTNING|LIGHTING|LIGNTNING)(.*)" = "LIGHTNING",
-          "LOCALLY HEAVY " = "",
-          "HURRICANE(.*)" = "HURRICANE",
-          "HIGHWAY " = "STREET ",
-          "SHOWERS?" = "RAIN",
-          "WILD(.*)FIRE(.*)" = "WILDFIRE",
-          "ROUGH SEAS(.*)" = "ROUGH SEAS",
-          "ICE(.*)ROAD(.*)" = "ICY ROADS",
-          "HIGH WIND(.*)" = "WIND",
-          "FREEZING (.*)" = "FREEZING PRECIP",
-          "FROST[[:punct:]]{1,}FREEZE" = "FREEZE",
-          "(.*)FUNNEL(.*)" = "FUNNEL CLOUD",
-          "FLASH FLOOD(.*)" = "FLASH FLOOD",
-          "FLOOD(.*)" = "FLOOD",
-          "DRY MICROBURST(.*)" = "DRY MICROBURST",
-          "COLD AND(.*)" = "COLD",
-          "COLD WEATHER" = "COLD", 
-          "COLD/(.*)" = "COLD",
-          "DROUGHT(.*)" = "DROUGHT",
-          "AGRICULTURAL FREEZE" = "FROST/FREEZE",
-          "APACHE COUNTY" = "HIGH WIND",
-          "ASTRONOMICAL HIGH TIDE" = "HIGH SURF",
-          "BEACH EROSION" = "HIGH SURF",
-          "BLOWING DUST" = "DUST STORM",
-          "BLOWING SNO(.*)" = "WINTER STORM",
-          "BREAKUP FLOOD" = "FLOOD",
-          "BRUSH FIRE" = "WILD FIRE",
-          "COASTAL EROSION" = "HIGH WIND",
-          "COASTAL FLOOD" = "FLOOD",
-          "COASTAL SURGE" = "STORM SURGE/TIDE",
-          "COASTAL STORM" = "MARINE THUNDERSTORM WIND",
-          "COOL AND WET" = "COLD/WIND CHILL",
-          "DAM BREAK" = "FLASH FLOOD",
-          "DOWNBURST" = "HEAVY RAIN",
-          "DRY MICROBURST" = "THUNDERSTORM WIND",
-          "DUST DEVIL WATERSPOUT" = "DUST DEVIL",
-          "DUST STORM/WIND" = "DUST STORM",
-          "EROSION/FLOOD" = "FLOOD",
-          "EXTENDED COLD" = "COLD/WIND CHILL",
-          "FOREST FIRES" = "WILDFIRE",
-          "FREEZING PRECIP" = "SLEET",
-          "GLAZE(.*)" = "SLEET",
-          "EARLY FROST" = "FROST/FREEZE", 
-          "EXTREME COLD" = "EXTREME COLD/WIND CHILL",
-          "EXTREME HEAT" = "EXCESSIVE HEAT",
-          "EXTREME WINDCHILL" = "EXTREME COLD/WIND CHILL",
-          "GRADIENT WIND" = "HIGH WIND",
-          "GRASS FIRES" = "WILDFIRE",
-          "GUSTNADO" = "THUNDERSTORM WIND",
-          "GUSTY WIND(.*)" = "HIGH WIND",
-          "HARD FREEZE" = "FROST/FREEZE",
-          "HEAT WAVE DROUGHT" = "EXCESSIVE HEAT",
-          "HEAT WAVE" = "EXCESSIVE HEAT",
-          "HEAVY LAKE EFFECT SNOW" = "LAKE-EFFECT SNOW",
-          "HEAVY MIX" = "WINTER STORM",
-          "HEAVY PRECIPITATION" = "HEAVY RAIN",
-          "HEAVY SNOW AND STRONG WINDS" = "BLIZZARD",
-          "HEAVY SNOW (.*)" = "WINTER STORM",
-          "HEAVY SNOW/(.*)" = "HEAVY SNOW",
-          "HEAVY SNOWPACK" = "HEAVY SNOW",
-          "EXCESSIVE SNOW" = "HEAVY SNOW",
-          "HEAVY SNOW-SQUALLS" = "HEAVY SNOW",
-          "HEAVY SURF(.*)" = "HIGH SURF",
-          "HEAVY SWELLS" = "HIGH SURF",
-          "HIGH WINDS" = "HIGH WIND",
-          "HIGH SEAS" = "MARINE HIGH WIND",
-          "HIGH SURF ADVISORY" = "HIGH SURF",
-          "HIGH SWELLS" = "HIGH SURF",
-          "HIGH TIDES" = "STORM SURGE/TIDE",
-          "HIGH WATER" = "FLOOD",
-          "HURRICANE" = "HURRICANE (TYPHOON)",
-          "ICE JAM" = "FLOOD",
-          "ICE/STRONG WINDS" = "ICE STORM",
-          "ICY ROADS" = "WINTER WEATHER",
-          "LAKE EFFECT SNOW" = "LAKE-EFFECT SNOW",
-          "LAKE FLOOD" = "FLOOD",
-          "LANDSLIDE" = "DEBRIS FLOW",
-          "LANDSPOUT" = "DUST DEVIL",
-          "MARINE ACCIDENT" = "MARINE THUNDERSTORM WIND",
-          "MARINE WIND" = "MARINE HIGH WIND",
-          "MICROBURST(.*)" = "THUNDERSTORM WIND",
-          "MIXED PRECIPITATION" = "WINTER WEATHER",
-          "MUDSLIDE" = "DEBRIS FLOW",
-          "NON-THUNDERSTORM" = "HIGH WIND",
-          "RIVER AND STREAM FLOOD" = "FLOOD",
-          "RIVER FLOOD" = "FLOOD",
-          "ROCK SLIDE" = "DEBRIS FLOW", 
-          "ROUGH SEAS" = "MARINE HIGH WIND",
-          "RURAL FLOOD" = "FLOOD",
-          "SMALL HAIL" = "HAIL",
-          "SMALL STREAM FLOOD" = "FLOOD",
-          "STORM FORCE WINDS" = "HIGH WIND",
-          "THUNDERSNOW" = "WINTER STORM",
-          "TIDAL FLOOD" = "STORM SURGE/TIDE",
-          "UNSEASONABLY COLD" = "COLD/WIND CHILL",
-          "UNSEASONABLY WARM" = "EXCESSIVE HEAT",
-          "URBAN FLOOD" = "FLOOD",
-          "VOLCANO" = "VOLCANIC ASH",
-          "WET THUNDERSTORM WIND" = "THUNDERSTORM WIND",
-          "WHIRLWIND" = "DUST DEVIL",
-          "WILD FIRE" = "WILDFIRE",
-          "WIND AND WAVE" = "HIGH WIND",
-          "WINTRY MIX" = "WINTER WEATHER",
-          "UNSEASONABLY RAIN" = "HEAVY RAIN",
-          "HIGH  WINDS" = "HIGH WIND",
-          "OTHER" = "DUST DEVIL",
-          "^COLD$" = "COLD/WIND CHILL",
-          "^FOG$" = "DENSE FOG", 
-          "^FREEZE$" = "FROST/FREEZE",
-          "^FROST$" = "FROST/FREEZE",
-          "^ICE$" = "ICE STORM",
-          "^MARINE THUNDERSTORM$" = "MARINE THUNDERSTORM WIND",
-          "^RAIN$" = "HEAVY RAIN",
-          "^SNOW$" = "HEAVY SNOW",
-          "^STORM SURGE$" = "STORM SURGE/TIDE",
-          "^THUNDERSTORM$" = "THUNDERSTORM WIND",
-          "^TYPHOON$" = "HURRICANE (TYPHOON)",
-          "^WIND$" = "HIGH WIND",
-          "^WIND CHILL$" = "COLD/WIND CHILL",
-          "^WINDS$" = "HIGH WIND"
-          )
-     ))
-```
-
+###Data Processing
+PROPDMGEXP and CROPDMGEXP, used as multipliers for property and crop damabe have
+several non-standard values not defined in the storm database documentation. 
+Elimination of the non-standard EXP types resulted in eliminating 70 of the 
+902,151 rows, or .01% of the data.
 ```{r calc_max}
-strm_data5 <- mutate_all(strm_data4, funs(toupper))
 
-strm_data6 <- strm_data5[!(strm_data5$PROPDMGEXP == "2" |
-                           strm_data5$PROPDMGEXP == "3" |
-                           strm_data5$PROPDMGEXP == "4" |
-                           strm_data5$PROPDMGEXP == "5" |
-                           strm_data5$PROPDMGEXP == "6" |
-                           strm_data5$PROPDMGEXP == "7" |
-                           strm_data5$PROPDMGEXP == "-" |
-                           strm_data5$PROPDMGEXP == "+" |
-                           strm_data5$PROPDMGEXP == "H"
-                           ),]
+strm_data2 <- strm_data_tst[!(strm_data_tst$PROPDMGEXP == "2" |
+                                strm_data_tst$PROPDMGEXP == "3" |
+                                strm_data_tst$PROPDMGEXP == "4" |
+                                strm_data_tst$PROPDMGEXP == "5" |
+                                strm_data_tst$PROPDMGEXP == "6" |
+                                strm_data_tst$PROPDMGEXP == "7" |
+                                strm_data_tst$PROPDMGEXP == "-" |
+                                strm_data_tst$PROPDMGEXP == "+" |
+                                strm_data_tst$PROPDMGEXP == "H"
+),]
 
-strm_data6 <- strm_data6[!(strm_data6$CROPDMGEXP == "?"),]
+strm_data2 <- strm_data2[!(strm_data2$CROPDMGEXP == "?"),]
 
+## Adjusted EXP to a multiplier
+strm_data2$PROPDMGEXP <- gsub("K", "1000", strm_data2$PROPDMGEXP)
+strm_data2$PROPDMGEXP <- gsub("M", "1000000", strm_data2$PROPDMGEXP)
+strm_data2$PROPDMGEXP <- gsub("B", "1000000000", strm_data2$PROPDMGEXP)
 
-strm_data6$PROPDMGEXP <- gsub("K", "1000", strm_data6$PROPDMGEXP)
-strm_data6$PROPDMGEXP <- gsub("M", "1000000", strm_data6$PROPDMGEXP)
-strm_data6$PROPDMGEXP <- gsub("B", "1000000000", strm_data6$PROPDMGEXP)
+strm_data2$CROPDMGEXP <- gsub("K", "1000", strm_data2$CROPDMGEXP)
+strm_data2$CROPDMGEXP <- gsub("M", "1000000", strm_data2$CROPDMGEXP)
+strm_data2$CROPDMGEXP <- gsub("B", "1000000000", strm_data2$CROPDMGEXP)
 
-strm_data6$CROPDMGEXP <- gsub("K", "1000", strm_data6$CROPDMGEXP)
-strm_data6$CROPDMGEXP <- gsub("M", "1000000", strm_data6$CROPDMGEXP)
-strm_data6$CROPDMGEXP <- gsub("B", "1000000000", strm_data6$CROPDMGEXP)
-
+## Convert column to numeric
 conv_cols <- c("PROPDMG","PROPDMGEXP", "CROPDMG", "CROPDMGEXP")
-strm_data6[conv_cols] <- sapply(strm_data6[conv_cols],as.numeric)
-sapply(strm_data6, class)
+strm_data2[conv_cols] <- sapply(strm_data2[conv_cols],as.numeric)
+##sapply(strm_data2, class)
 
-strm_data6$PROPDMG_tot <- strm_data6$PROPDMG * strm_data6$PROPDMGEXP
-strm_data6$CROPDMG_tot <- strm_data6$CROPDMG * strm_data6$CROPDMGEXP
-strm_data6$DMG_tot <- strm_data6$PROPDMG_tot + strm_data6$CROPDMG_tot
-DMG_total <- select(strm_data6, EVTYPEFix, DMG_tot)
+## Create damage totals by muliplying DMG columns by EXP columns
+strm_data2$PROPDMG_tot <- strm_data2$PROPDMG * strm_data2$PROPDMGEXP
+strm_data2$CROPDMG_tot <- strm_data2$CROPDMG * strm_data2$CROPDMGEXP
+
+## Add Property Damage to Crop Damage
+strm_data2$DMG_tot <- strm_data2$PROPDMG_tot + strm_data2$CROPDMG_tot
+DMG_total <- select(strm_data2, EVTYPEFix, DMG_tot)
+
+## Get the sum of the damages by EVTYPE
 DAMAGE_total <- aggregate(DMG_tot~EVTYPEFix, DMG_total, sum)
-DAMAGE_total_max <- DAMAGE_total[which.max(DAMAGE_total$DMG_tot),]
-print(DAMAGE_total_max)
+
+## Get top 5
+propcrop_5 <- DAMAGE_total[order(DAMAGE_total$DMG_tot, decreasing=T)[1:5],]
+
+## Bar graph
+barplot(propcrop_5$DMG_tot, main = "Total Dollars of Property and Crop Damages", 
+        names.arg = propcrop_5$EVTYPEFix, cex.names = .75)
 ```
+Per the database, floods have caused the highest amount of property and crop damage during the study period. 
