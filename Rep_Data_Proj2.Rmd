@@ -33,7 +33,8 @@ strm_data <- read.csv(bzfile("repdata-data-StormData.csv.bz2"), header = TRUE, s
 The documentation for the storm data base indicated there were 48 different storm
 events. The database actually included over 900 different storm events. After a
 thorough review of the data, a cleansing of the event types was performed to gather
-all events into the specific storm events detailed in the documentation.
+the majority of the events into the specific storm events detailed in the documentation.
+When complete, only 11 observations were not classified.
 
 ```{r tidy_data1}
 
@@ -110,6 +111,7 @@ strm_data1 <- strm_data %>%
             "ROUGH (SEAS|SURF)" = "MARINE HIGH WIND",
             "RAIN(.*)" = "HEAVY RAIN",
             "MUD(.*)SLIDE(.*)" = "DEBRIS FLOW",
+            "RECORD LOW" = "COLD/WIND CHILL",
             "(NEAR )?RECORD ?" = "",
             "(LIGHTNING|LIGHTING|LIGNTNING)(.*)" = "LIGHTNING",
             "LOCALLY HEAVY " = "",
@@ -170,7 +172,6 @@ strm_data1 <- strm_data %>%
             "LOW TEMPERATURE" = "COLD/WIND CHILL",
             "MARINE STRONG WIND" = "MARINE HIGH WIND",
             "MARINE WIND" = "MARINE STRONG WIND",
-            "MIXED PRECIP" = "WINTER STORM",
             "RAPIDLY RISING WATER" = "FLASH FLOOD",
             "SMALL HAIL" = "HAIL",
             "STORM SURGE" = "STORM SURGE/TIDE",
@@ -329,12 +330,11 @@ strm_data1 <- strm_data %>%
             "MIX" = "WINTER WEATHER",
             "MONTHLY HEAVY RAIN" = "HEAVY RAIN",
             "MONTHLY PRECIPITATION" = "HEAVY RAIN",
-            "MONTHLY SNOWFALL" = "HEAVY SNOWFALL",
+            "MONTHLY SNOWFALL" = "HEAVY SNOW",
             "MOUNTAIN SNOWS" = "HEAVY SNOW",
             "NORMAL PRECIPITATION" = "HEAVY RAIN",
             "PATCHY DENSE DENSE FOG" = "DENSE FOG",
             "PATCHY ICE STORM" = "ICE STORM",
-            "PRECIP(.*)" = "HEAVY RAIN",
             "PROLONG WARMTH" = "HEAT",
             "PROLONGED HEAVY RAIN" = "HEAVY RAIN",
             "REMNANTS OF FLOYD" = "HURRICANE (TYPHOON)",
@@ -352,9 +352,11 @@ strm_data1 <- strm_data %>%
             "WET SNOW" = "HEAVY SNOW",
             "WET(.*)" = "HEAVY RAIN",
             "WILDFIRES" = "WILDFIRE",
-            "WINTER STORMITATION" = "WINTER STORMITATION"
-            )
+            "MONTHLY TEMPERATURE" = "COLD/WIND CHILL"
+          )
      ))
+strm_data1$EVTYPEFix <- gsub("WINTER WEATHERED PRECIP", "WINTER WEATHER", strm_data1$EVTYPEFix)
+strm_data1$EVTYPEFix <- gsub("HEAVY HEAVY SNOW", "HEAVY SNOW", strm_data1$EVTYPEFix)
 ```
 
 ### 1. Across the United States, which types of events (as indicated in the EVTYPE variable) are most harmful with respect to population health?
@@ -374,6 +376,7 @@ fat_inj_5 <- fat_inj_tot[order(fat_inj_tot$FAT_INJ, decreasing=T)[1:5],]
 barplot(fat_inj_5$FAT_INJ, main = "Total Fatalities and Injuries", 
         names.arg = fat_inj_5$EVTYPEFix, cex.names = .75)
 ```
+
 Per the data collected, tornados have caused the most direct injuries and fatalities during the study period. 
 
 
@@ -385,15 +388,15 @@ Elimination of the non-standard EXP types resulted in eliminating 70 of the
 902,151 rows, or .01% of the data.
 ```{r calc_max}
 
-strm_data2 <- strm_data_tst[!(strm_data_tst$PROPDMGEXP == "2" |
-                                strm_data_tst$PROPDMGEXP == "3" |
-                                strm_data_tst$PROPDMGEXP == "4" |
-                                strm_data_tst$PROPDMGEXP == "5" |
-                                strm_data_tst$PROPDMGEXP == "6" |
-                                strm_data_tst$PROPDMGEXP == "7" |
-                                strm_data_tst$PROPDMGEXP == "-" |
-                                strm_data_tst$PROPDMGEXP == "+" |
-                                strm_data_tst$PROPDMGEXP == "H"
+strm_data2 <- strm_data1[!(strm_data1$PROPDMGEXP == "2" |
+                                strm_data1$PROPDMGEXP == "3" |
+                                strm_data1$PROPDMGEXP == "4" |
+                                strm_data1$PROPDMGEXP == "5" |
+                                strm_data1$PROPDMGEXP == "6" |
+                                strm_data1$PROPDMGEXP == "7" |
+                                strm_data1$PROPDMGEXP == "-" |
+                                strm_data1$PROPDMGEXP == "+" |
+                                strm_data1$PROPDMGEXP == "H"
 ),]
 
 strm_data2 <- strm_data2[!(strm_data2$CROPDMGEXP == "?"),]
@@ -410,7 +413,6 @@ strm_data2$CROPDMGEXP <- gsub("B", "1000000000", strm_data2$CROPDMGEXP)
 ## Convert column to numeric
 conv_cols <- c("PROPDMG","PROPDMGEXP", "CROPDMG", "CROPDMGEXP")
 strm_data2[conv_cols] <- sapply(strm_data2[conv_cols],as.numeric)
-##sapply(strm_data2, class)
 
 ## Create damage totals by muliplying DMG columns by EXP columns
 strm_data2$PROPDMG_tot <- strm_data2$PROPDMG * strm_data2$PROPDMGEXP
@@ -428,6 +430,7 @@ propcrop_5 <- DAMAGE_total[order(DAMAGE_total$DMG_tot, decreasing=T)[1:5],]
 
 ## Bar graph
 barplot(propcrop_5$DMG_tot, main = "Total Dollars of Property and Crop Damages", 
-        names.arg = propcrop_5$EVTYPEFix, cex.names = .75)
+        names.arg = propcrop_5$EVTYPEFix, cex.names = .65)
 ```
+
 Per the database, floods have caused the highest amount of property and crop damage during the study period. 
