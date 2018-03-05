@@ -361,6 +361,9 @@ strm_data1$EVTYPEFix <- gsub("HEAVY HEAVY SNOW", "HEAVY SNOW", strm_data1$EVTYPE
 
 ### 1. Across the United States, which types of events (as indicated in the EVTYPE variable) are most harmful with respect to population health?
 
+### Results
+As can be seen in the chart below, tornados have caused the most direct injuries and fatalities during the study period. 
+
 ```{r fat+inj}
 ## Create column with the sum of fatalities and injuries
 strm_data1$FAT_INJ <- strm_data1$FATALITIES + strm_data1$INJURIES
@@ -377,10 +380,7 @@ barplot(fat_inj_5$FAT_INJ, main = "Total Fatalities and Injuries",
         names.arg = fat_inj_5$EVTYPEFix, cex.names = .75)
 ```
 
-Per the data collected, tornados have caused the most direct injuries and fatalities during the study period. 
-
-
-## 2. Across the United States, which types of events have the greatest economic consequences?
+### 2. Across the United States, which types of events have the greatest economic consequences?
 ###Data Processing
 PROPDMGEXP and CROPDMGEXP, used as multipliers for property and crop damabe have
 several non-standard values not defined in the storm database documentation. 
@@ -424,7 +424,10 @@ DMG_total <- select(strm_data2, EVTYPEFix, DMG_tot)
 
 ## Get the sum of the damages by EVTYPE
 DAMAGE_total <- aggregate(DMG_tot~EVTYPEFix, DMG_total, sum)
-
+```
+###Results
+Per the graph below, floods have caused the highest amount of property and crop damage during the study period. 
+```{r graph2}
 ## Get top 5
 propcrop_5 <- DAMAGE_total[order(DAMAGE_total$DMG_tot, decreasing=T)[1:5],]
 
@@ -432,5 +435,3 @@ propcrop_5 <- DAMAGE_total[order(DAMAGE_total$DMG_tot, decreasing=T)[1:5],]
 barplot(propcrop_5$DMG_tot, main = "Total Dollars of Property and Crop Damages", 
         names.arg = propcrop_5$EVTYPEFix, cex.names = .65)
 ```
-
-Per the database, floods have caused the highest amount of property and crop damage during the study period. 
